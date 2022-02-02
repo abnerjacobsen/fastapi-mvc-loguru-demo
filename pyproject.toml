@@ -5,7 +5,7 @@ description = "This project was generated with fastapi-mvc."
 authors = ["abnerjacobsen <abner@apoana.com.br>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://your.repo.url.here"
+repository = "https://github.com/abnerjacobsen/fastapi-mvc-loguru-demo"
 classifiers = [
     'Intended Audience :: Developers',
     'Natural Language :: English',
@@ -46,7 +46,7 @@ mvc-demo = 'mvc_demo.cli.cli:cli'
 mvc-demo-dev = 'mvc_demo.wsgi_uvicorn:run_dev_wsgi'
 
 [tool.poetry.urls]
-"Issues" = "https://your.repo.url.here/issues"
+"Issues" = "https://github.com/abnerjacobsen/fastapi-mvc-loguru-demo"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
