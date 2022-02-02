@@ -20,6 +20,7 @@ global_log_config(
 
 log = logger
 
+
 async def on_startup():
     """Fastapi startup event handler.
 
@@ -72,7 +73,7 @@ def get_app():
     app.add_exception_handler(HTTPException, http_exception_handler)
 
     # Register middlewares
-    app.add_middleware(CorrelationIdMiddleware, header_name='X-Request-ID')
+    app.add_middleware(CorrelationIdMiddleware, header_name="X-Request-ID")
 
     return app
 

@@ -1,21 +1,21 @@
+"""Loguru utils file."""
 import logging
 import os
 import platform
-from asgi_correlation_id.context import correlation_id
 from datetime import datetime, timezone
-from gunicorn.glogging import Logger
-from loguru import logger
 from pprint import pformat
 from sys import stdout
 from typing import Union
 
+from asgi_correlation_id.context import correlation_id
+from gunicorn.glogging import Logger
+from loguru import logger
+from mvc_demo.config.application import settings
+
 try:
     from orjson import dumps
-except:
+except Exception as ex:
     from json import dumps
-
-# App core modules
-from mvc_demo.config.application import settings
 
 # References
 # Solution comes from:
@@ -24,19 +24,47 @@ from mvc_demo.config.application import settings
 #   https://github.com/Delgan/loguru/issues/365
 #   https://loguru.readthedocs.io/en/stable/api/logger.html#sink
 
+
 def set_log_extras(record):
-    record["extra"]["datetime"] = datetime.now(timezone.utc)   # Log datetime in UTC time zone, even if server is using another timezone
-    record["extra"]["host"] = os.getenv('HOSTNAME', os.getenv('COMPUTERNAME', platform.node())).split('.')[0]
+    """set_log_extras [summary].
+
+    [extended_summary]
+
+    Args:
+        record ([type]): [description]
+    """
+    record["extra"]["datetime"] = datetime.now(
+        timezone.utc
+    )  # Log datetime in UTC time zone, even if server is using another timezone
+    record["extra"]["host"] = os.getenv(
+        "HOSTNAME", os.getenv("COMPUTERNAME", platform.node())
+    ).split(".")[0]
     record["extra"]["pid"] = os.getpid()
     record["extra"]["request_id"] = correlation_id.get()
     record["extra"]["app_name"] = settings.PROJECT_NAME
 
-# 
+
+#
 # Set Gunicorn loggin handler to NullHandler, this allow
 # Loguru to capture the logs emitted by Gunicorn
 #
 class StubbedGunicornLogger(Logger):
+    """StubbedGunicornLogger [summary].
+
+    [extended_summary]
+
+    Args:
+        Logger ([type]): [description]
+    """
+
     def setup(self, cfg):
+        """Make the setup of Gunicorn Logger.
+
+        [extended_summary]
+
+        Args:
+            cfg ([type]): [description]
+        """
         self.loglevel = self.LOG_LEVELS.get(cfg.loglevel.lower(), logging.INFO)
 
         handler = logging.NullHandler()
@@ -52,7 +80,22 @@ class StubbedGunicornLogger(Logger):
 
 
 class InterceptHandler(logging.Handler):
+    """InterceptHandler [summary].
+
+    [extended_summary]
+
+    Args:
+        logging ([type]): [description]
+    """
+
     def emit(self, record):
+        """Emit [summary].
+
+        [extended_summary]
+
+        Args:
+            record ([type]): [description]
+        """
         # Get corresponding Loguru level if it exists
         try:
             level = logger.level(record.levelname).name
@@ -69,20 +112,27 @@ class InterceptHandler(logging.Handler):
             level, record.getMessage()
         )
 
+
 def format_record(record: dict) -> str:
-    """
-    Custom format for loguru loggers.
-    Uses pformat for log any data like request/response body 
+    """Return an custom format for loguru loggers.
+
+    Uses pformat for log any data like request/response body
     >>> [   {   'count': 2,
     >>>         'users': [   {'age': 87, 'is_active': True, 'name': 'Nick'},
     >>>                      {'age': 27, 'is_active': True, 'name': 'Alex'}]}]
     """
-    # format_string = LOGURU_FORMAT
-    # format_string = '<green>{extra[datetime]}</green> | <green>{extra[app_name]}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level> | <level>{extra}</level>'
-    # format_string = "<green>{extra[datetime]}</green> | <green>{extra[pid]}</green> | <green>{extra[correlation_id]}</green> | <green>{extra[request_id]}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    format_string = "<green>{extra[datetime]}</green> | <green>{extra[app_name]}</green> | <green>{extra[host]}</green> | <green>{extra[pid]}</green> | <green>{extra[request_id]}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    format_string = "<green>{extra[datetime]}</green> | "
+    format_string += "<green>{extra[app_name]}</green> | "
+    format_string += "<green>{extra[host]}</green> | "
+    format_string += "<green>{extra[pid]}</green> | "
+    format_string += "<green>{extra[request_id]}</green> | "
+    format_string += "<level>{level: <8}</level> | "
+    format_string += "<cyan>{name}</cyan>:"
+    format_string += "<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+    format_string += "<level>{message}</level>"
 
-    # This is to nice print data, like: logger.bind(payload=dataobject).info("Received data")
+    # This is to nice print data, like:
+    # logger.bind(payload=dataobject).info("Received data")
     if record["extra"].get("payload") is not None:
         record["extra"]["payload"] = pformat(
             record["extra"]["payload"], indent=4, compact=True, width=88
@@ -95,6 +145,13 @@ def format_record(record: dict) -> str:
 
 
 def orjson_log_sink(msg):
+    """orjson_log_sink [summary].
+
+    [extended_summary]
+
+    Args:
+        msg ([type]): [description]
+    """
     r = msg.record
     rec = {
         "elapsed": r["elapsed"].total_seconds(),
@@ -120,7 +177,21 @@ def orjson_log_sink(msg):
     print(dumps(rec), flush=True)
 
 
-def global_log_config(log_level: Union[str, int] = logging.INFO, json: bool = True):
+def global_log_config(
+    log_level: Union[str, int] = logging.INFO, json: bool = True
+):
+    """global_log_config [summary].
+
+    [extended_summary]
+
+    Args:
+        log_level (Union[str, int], optional): [description].
+            Defaults to logging.INFO.
+        json (bool, optional): [description]. Defaults to True.
+
+    Returns:
+        [type]: [description]
+    """
     if isinstance(log_level, str) and (log_level in logging._nameToLevel):
         log_level = logging.INFO
 
@@ -164,7 +235,6 @@ def global_log_config(log_level: Union[str, int] = logging.INFO, json: bool = Tr
                     # "sink": "./somefile.log",
                     # "rotation": "10 MB",
                     "serialize": False,
-                    # "format": "<green>{extra[datetime]}</green> | <green>{extra[correlation_id]}</green> | <green>{extra[request_id]}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
                     "format": format_record,
                     "diagnose": True,
                     "backtrace": True,

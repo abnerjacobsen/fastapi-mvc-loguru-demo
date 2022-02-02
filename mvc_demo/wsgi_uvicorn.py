@@ -8,7 +8,6 @@ import sys
 from uvicorn import Config, Server
 import uvicorn
 from loguru import logger
-
 from mvc_demo.app.asgi import get_app
 from mvc_demo.config.application import settings
 from mvc_demo.core.loguru_logs import global_log_config

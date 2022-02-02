@@ -38,7 +38,6 @@ class Application(BaseSettings):
     LOG_LEVEL: str = "DEBUG"
     JSON_LOGS: bool = False
 
-
     class Config:
         """Config sub-class needed to customize BaseSettings settings.
 

@@ -167,8 +167,8 @@ access_log_format = os.getenv(
 
 #
 # Use custom class to make logs from Gunicorn be handled by Loguru
-# 
-logger_class  = "mvc_demo.core.loguru_logs.StubbedGunicornLogger"
+#
+logger_class = "mvc_demo.core.loguru_logs.StubbedGunicornLogger"
 
 #
 # Process naming
@@ -251,4 +251,3 @@ def worker_int(worker):
 def worker_abort(worker):
     """Execute when worker received the SIGABRT signal."""
     worker.log.info("worker received SIGABRT signal")
-
